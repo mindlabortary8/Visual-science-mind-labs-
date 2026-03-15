@@ -1,39 +1,211 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>Interactive Optics Lab | Ray Tracer</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: rgba(30, 41, 59, 0.7);
+            --accent: #38bdf8;
+        }
 
-<title>Mirror Ray Diagram Simulator</title>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            color: white;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
 
-<link rel="stylesheet" href="mirror.css">
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--panel);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
 
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        
+        button {
+            background: #334155;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.active { background: var(--accent); font-weight: bold; }
+        button:hover { background: #475569; }
+
+        canvas {
+            cursor: crosshair;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .label { font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+    </style>
 </head>
-
 <body>
 
-<h1>Mirror Ray Diagram Simulator</h1>
-
-<div class="controls">
-
-<button onclick="setMirror('concave')">Concave Mirror</button>
-<button onclick="setMirror('convex')">Convex Mirror</button>
-
-<br><br>
-
-<label>Object Distance</label>
-
-<br>
-
-<input type="range" id="objectSlider" min="50" max="750" value="300">
-
+<div id="controls">
+    <div class="label">MIRROR TYPE</div>
+    <div class="btn-group">
+        <button onclick="setMirror('plane')" id="btn-plane">Plane</button>
+        <button onclick="setMirror('concave')" id="btn-concave" class="active">Concave</button>
+        <button onclick="setMirror('convex')" id="btn-convex">Convex</button>
+    </div>
+    <div style="margin-top: 15px;">
+        <div class="label">OBJECT POSITION (Drag the mouse)</div>
+        <p style="font-size: 11px; color: #64748b;">Moving the cursor acts as the light source.</p>
+    </div>
 </div>
 
-<div id="caseText"></div>
+<canvas id="canvas"></canvas>
 
-<canvas id="canvas" width="1200" height="550"></canvas>
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let mirrorType = 'concave';
+    let mouse = { x: 0, y: 0 };
+    
+    // Physical constants
+    const focalLength = 200;
+    const mirrorX = 0; // Relative to center
+    const curvature = 1 / (focalLength * 2);
 
-<script src="mirror.js"></script>
+    function init() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        mouse.x = width / 4;
+        mouse.y = height / 2 - 50;
+    }
 
+    window.addEventListener('resize', init);
+    window.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    function setMirror(type) {
+        mirrorType = type;
+        document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + type).classList.add('active');
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        const centerX = width / 2 + 100;
+        const centerY = height / 2;
+
+        // Draw Principal Axis
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.moveTo(0, centerY);
+        ctx.lineTo(width, centerY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Mirror properties
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#94a3b8';
+        ctx.beginPath();
+
+        if (mirrorType === 'plane') {
+            ctx.moveTo(centerX, centerY - 200);
+            ctx.lineTo(centerX, centerY + 200);
+        } else {
+            const span = 0.8; 
+            for (let t = -span; t <= span; t += 0.01) {
+                let xOffset;
+                if (mirrorType === 'concave') {
+                    xOffset = (t * t) / (4 * curvature);
+                } else {
+                    xOffset = -(t * t) / (4 * curvature);
+                }
+                const x = centerX + xOffset;
+                const y = centerY + t * 250;
+                t === -span ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+        }
+        ctx.stroke();
+
+        // Ray Tracing Logic
+        const rays = 15;
+        for (let i = 0; i < rays; i++) {
+            const angle = (i - (rays-1)/2) * 0.05;
+            drawRay(mouse.x, mouse.y, angle, centerX, centerY);
+        }
+
+        // Object
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#38bdf8';
+
+        requestAnimationFrame(draw);
+    }
+
+    function drawRay(x, y, angle, mX, mY) {
+        const dx = Math.cos(angle);
+        const dy = Math.sin(angle);
+        
+        let hitX, hitY, normalAngle;
+
+        if (mirrorType === 'plane') {
+            hitX = mX;
+            hitY = y + (mX - x) * (dy / dx);
+            normalAngle = Math.PI;
+        } else {
+            // Approximation for curved mirrors
+            hitX = mX; 
+            hitY = y + (mX - x) * (dy / dx);
+            const distFromAxis = hitY - mY;
+            // Parabolic slope dy/dx = 2cx
+            const slope = 2 * (mirrorType === 'concave' ? curvature : -curvature) * distFromAxis;
+            normalAngle = Math.atan(slope) + (mirrorType === 'concave' ? Math.PI : 0);
+        }
+
+        // Draw Incident Ray
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.moveTo(x, y);
+        ctx.lineTo(hitX, hitY);
+        ctx.stroke();
+
+        // Calculate Reflection
+        const incidentAngle = Math.atan2(hitY - y, hitX - x);
+        const reflectionAngle = 2 * normalAngle - incidentAngle;
+
+        // Draw Reflected Ray
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(248, 113, 113, 0.8)';
+        ctx.moveTo(hitX, hitY);
+        ctx.lineTo(hitX + Math.cos(reflectionAngle) * 1000, hitY + Math.sin(reflectionAngle) * 1000);
+        ctx.stroke();
+    }
+
+    init();
+    draw();
+</script>
 </body>
-
 </html>
