@@ -2,199 +2,295 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Interactive Mirror Lab | Ray Diagrams</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precision Optics Lab v3.0</title>
     <style>
-        :root { --bg: #020617; --accent: #60a5fa; --glass: rgba(30, 41, 59, 0.8); }
-        body { margin: 0; background: radial-gradient(circle at center, #1e293b 0%, #020617 100%); color: white; font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
-        
-        #ui { position: absolute; top: 20px; left: 20px; background: var(--glass); padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); width: 300px; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        
-        .slider-container { margin: 20px 0; }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--accent); }
-        
-        .btn-group { display: flex; gap: 8px; margin-bottom: 20px; }
-        button { flex: 1; padding: 10px; border: none; border-radius: 8px; background: #334155; color: #94a3b8; cursor: pointer; transition: 0.3s; font-weight: 600; }
-        button.active { background: var(--accent); color: white; box-shadow: 0 0 15px rgba(96, 165, 250, 0.4); }
+        :root {
+            --bg: #0a0a0c;
+            --surface: #16161a;
+            --accent: #00f2ff;
+            --ray-inc: #fbbf24;
+            --ray-ref: #ff4757;
+            --text: #e2e8f0;
+        }
 
-        .stats { font-family: monospace; font-size: 13px; color: #94a3b8; line-height: 1.6; }
-        .stats b { color: var(--accent); }
-        
-        canvas { display: block; }
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Side Panel Styling */
+        #panel {
+            width: 320px;
+            background: var(--surface);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        h2 { margin: 0; font-weight: 300; letter-spacing: 2px; color: var(--accent); font-size: 1.2rem; }
+
+        .control-group { display: flex; flex-direction: column; gap: 10px; }
+        label { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; }
+
+        .mode-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button {
+            background: #24242b;
+            border: 1px solid #3f3f46;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button.active { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); }
+
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            background: #2d2d37;
+            border-radius: 5px;
+            appearance: none;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .data-display {
+            background: #000;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            border: 1px solid #333;
+        }
+        .data-display div { margin-bottom: 5px; }
+        .data-display span { color: var(--accent); }
+
+        canvas { flex-grow: 1; cursor: grab; }
+        canvas:active { cursor: grabbing; }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <h2 style="margin-top:0; font-size: 1.2rem;">Optics Engine</h2>
+<div id="panel">
+    <h2>OPTICS ENGINE</h2>
     
-    <div class="btn-group">
-        <button onclick="setMode('concave')" id="btn-concave" class="active">Concave</button>
-        <button onclick="setMode('convex')" id="btn-convex">Convex</button>
-        <button onclick="setMode('plane')" id="btn-plane">Plane</button>
+    <div class="control-group">
+        <label>Mirror Geometry</label>
+        <div class="mode-selector">
+            <button onclick="setMirror('concave')" id="m-concave" class="active">Concave</button>
+            <button onclick="setMirror('convex')" id="m-convex">Convex</button>
+            <button onclick="setMirror('plane')" id="m-plane" style="grid-column: span 2;">Plane Mirror</button>
+        </div>
     </div>
 
-    <div class="slider-container">
-        <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Object Position (u)</label>
-        <input type="range" id="uRange" min="10" max="600" value="300">
+    <div class="control-group">
+        <label>Object Distance (u)</label>
+        <input type="range" id="u-input" min="20" max="600" value="300">
     </div>
 
-    <div class="stats" id="info">
-        Case: <b>Loading...</b><br>
-        Image: <b>Calculating...</b>
+    <div class="data-display" id="debug">
+        <div>Case: <span id="case-name">-</span></div>
+        <div>Nature: <span id="nature">-</span></div>
+        <div>Pos (v): <span id="v-val">0</span></div>
+        <div>Mag (m): <span id="m-val">0</span></div>
+    </div>
+
+    <div style="margin-top: auto; font-size: 0.7rem; color: #4b5563;">
+        RAY KEY:<br>
+        <span style="color: var(--ray-inc)">■</span> Incident Ray<br>
+        <span style="color: var(--ray-ref)">■</span> Reflected Ray
     </div>
 </div>
 
-<canvas id="opticsCanvas"></canvas>
+<canvas id="stage"></canvas>
 
 <script>
-const canvas = document.getElementById('opticsCanvas');
-const ctx = canvas.getContext('2d');
-const uSlider = document.getElementById('uRange');
-
-let mode = 'concave';
-const f = 120; // Focal length
-const c = 240; // Center of curvature
-let u = 300;   // Object distance
-
-function setMode(m) {
-    mode = m;
-    document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-' + m).classList.add('active');
-}
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    u = parseInt(uSlider.value);
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    const uInput = document.getElementById('u-input');
     
-    const midX = canvas.width * 0.7; // Mirror position
-    const midY = canvas.height / 2;
-    const objH = 80; // Object height
-    const objX = midX - u;
+    let state = {
+        mirror: 'concave',
+        f: 150, // Focal length
+        u: 300, // Object distance
+        objHeight: 70
+    };
 
-    // 1. Draw Principal Axis
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(canvas.width, midY); ctx.stroke();
-
-    // 2. Draw Focal Points
-    if (mode !== 'plane') {
-        const fDir = mode === 'concave' ? -1 : 1;
-        drawPoint(midX + (f * fDir), midY, 'F');
-        drawPoint(midX + (c * fDir), midY, 'C');
+    function setMirror(type) {
+        state.mirror = type;
+        document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        document.getElementById('m-'+type).classList.add('active');
     }
 
-    // 3. Draw Mirror
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.beginPath();
-    if (mode === 'plane') {
-        ctx.moveTo(midX, midY - 150); ctx.lineTo(midX, midY + 150);
-    } else {
-        const arcDir = mode === 'concave' ? 0 : 1;
-        ctx.arc(midX + (c * (mode === 'concave' ? -1 : 1)), midY, c, 
-                arcDir * Math.PI - 0.5, arcDir * Math.PI + 0.5);
+    function init() {
+        canvas.width = window.innerWidth - 320;
+        canvas.height = window.innerHeight;
     }
-    ctx.stroke();
 
-    // 4. Calculate Image Position (Lens/Mirror Equation: 1/v + 1/u = 1/f)
-    // For mirrors, f is negative for concave in this coordinate system
-    let v, vH, caseText, typeText;
-    
-    if (mode === 'plane') {
-        v = u; vH = objH;
-        caseText = "Plane Reflection";
-        typeText = "Virtual, Erect, Same Size";
-    } else {
-        const focal = mode === 'concave' ? -f : f;
-        const distU = -u; 
-        v = 1 / ((1/focal) - (1/distU));
-        const mag = -v / distU;
-        vH = objH * mag;
+    window.addEventListener('resize', init);
+    init();
 
-        // Logic for cases
-        if (mode === 'concave') {
-            if (u > c) caseText = "Beyond C";
-            else if (u === c) caseText = "At C";
-            else if (u > f) caseText = "Between C and F";
-            else if (u === f) caseText = "At F (Infinity)";
-            else caseText = "Between F and P";
-        } else {
-            caseText = "Convex Mirror";
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        state.u = parseInt(uInput.value);
+        
+        const centerX = canvas.width * 0.7; 
+        const centerY = canvas.height / 2;
+        const fPos = state.f;
+        const rPos = state.f * 2;
+
+        // 1. Draw Grid/Axis
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.beginPath();
+        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY);
+        ctx.stroke();
+
+        // 2. Draw Focal Points
+        if (state.mirror !== 'plane') {
+            const side = state.mirror === 'concave' ? -1 : 1;
+            drawPoint(centerX + fPos * side, centerY, 'F');
+            drawPoint(centerX + rPos * side, centerY, 'C');
         }
-        typeText = `${Math.abs(vH) > objH ? 'Magnified' : 'Diminished'}, ${vH > 0 ? 'Inverted' : 'Erect'}`;
+
+        // 3. Calculate Optics (1/v + 1/u = 1/f)
+        let v = 0, m = 0, nature = "", caseStr = "";
+        const uCoord = -state.u; // Real objects have negative u in Cartesian
+
+        if (state.mirror === 'plane') {
+            v = state.u;
+            m = 1;
+            caseStr = "Standard Reflection";
+            nature = "Virtual, Erect, Same Size";
+        } else {
+            const fCoord = state.mirror === 'concave' ? -state.f : state.f;
+            v = 1 / ((1/fCoord) - (1/uCoord));
+            m = -v / uCoord;
+
+            // Logic for Lab Cases
+            if (state.mirror === 'concave') {
+                if (state.u > rPos) { caseStr = "Beyond C"; nature = "Real, Inverted, Diminished"; }
+                else if (Math.abs(state.u - rPos) < 2) { caseStr = "At C"; nature = "Real, Inverted, Same Size"; }
+                else if (state.u > fPos) { caseStr = "Between C & F"; nature = "Real, Inverted, Magnified"; }
+                else if (Math.abs(state.u - fPos) < 2) { caseStr = "At F"; nature = "At Infinity"; v = 10000; }
+                else { caseStr = "Between F & P"; nature = "Virtual, Erect, Magnified"; }
+            } else {
+                caseStr = "Anywhere"; nature = "Virtual, Erect, Diminished";
+            }
+        }
+
+        document.getElementById('case-name').innerText = caseStr;
+        document.getElementById('nature').innerText = nature;
+        document.getElementById('v-val').innerText = Math.abs(v).toFixed(1);
+        document.getElementById('m-val').innerText = Math.abs(m).toFixed(2) + "x";
+
+        // 4. Draw Mirror Surface
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#94a3b8';
+        ctx.beginPath();
+        if (state.mirror === 'plane') {
+            ctx.moveTo(centerX, centerY - 200); ctx.lineTo(centerX, centerY + 200);
+        } else {
+            const dir = state.mirror === 'concave' ? 0 : 1;
+            ctx.arc(centerX + (rPos * (state.mirror === 'concave' ? -1 : 1)), centerY, rPos, 
+                    dir * Math.PI - 0.5, dir * Math.PI + 0.5);
+        }
+        ctx.stroke();
+
+        // 5. Draw Rays
+        const objX = centerX - state.u;
+        const objY = centerY - state.objHeight;
+        const imgX = centerX + v;
+        const imgY = centerY + (state.objHeight * m);
+
+        // Ray 1: Parallel to Axis
+        drawRay(objX, objY, centerX, objY, imgX, imgY, '#fbbf24');
+        
+        // Ray 2: Passing through Pole
+        drawRay(objX, objY, centerX, centerY, imgX, imgY, '#38bdf8');
+
+        // 6. Draw Object and Image
+        drawArrow(objX, centerY, state.objHeight, varColor('--accent'), "OBJECT");
+        if (Math.abs(v) < 2000) {
+            drawArrow(imgX, centerY, -state.objHeight * m, '#ff4757', "IMAGE", v > 0);
+        }
+
+        requestAnimationFrame(draw);
     }
 
-    document.getElementById('info').innerHTML = `Case: <b>${caseText}</b><br>Nature: <b>${typeText}</b>`;
-
-    // 5. Draw Object
-    drawArrow(objX, midY, objH, '#60a5fa', 'Object');
-
-    // 6. Draw Rays (The Tricky Part)
-    ctx.lineWidth = 1.5;
-    
-    // Ray 1: Parallel then through F
-    ctx.strokeStyle = '#fbbf24'; 
-    ctx.beginPath();
-    ctx.moveTo(objX, midY - objH);
-    ctx.lineTo(midX, midY - objH); // Incident
-    if (mode === 'concave') {
-        ctx.lineTo(midX + v, midY + vH); // Reflected through image tip
-    } else if (mode === 'convex') {
-        ctx.lineTo(midX + 500, midY - objH + (500 * (objH/(f)))); // Diverging
-    } else {
-        ctx.lineTo(objX, midY + objH);
-    }
-    ctx.stroke();
-
-    // Ray 2: Center of curvature / Pole
-    ctx.strokeStyle = '#f87171';
-    ctx.beginPath();
-    ctx.moveTo(objX, midY - objH);
-    ctx.lineTo(midX, midY); // To Pole
-    ctx.lineTo(midX - (mode === 'plane' ? u : 800), midY + (mode === 'plane' ? objH : 800 * (vH/v)));
-    ctx.stroke();
-
-    // 7. Draw Image
-    if (Math.abs(v) < 2000) {
-        const imgX = midX + v;
-        drawArrow(imgX, midY, -vH, '#f87171', 'Image', true);
+    function drawRay(x1, y1, hitX, hitY, targetX, targetY, color) {
+        ctx.lineWidth = 1.5;
+        // Incident
+        ctx.strokeStyle = color;
+        ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(hitX, hitY); ctx.stroke();
+        
+        // Reflected
+        ctx.beginPath();
+        ctx.strokeStyle = varColor('--ray-ref');
+        ctx.moveTo(hitX, hitY);
+        // If image is virtual, draw dashed trace-back
+        if (targetX > hitX) {
+            ctx.setLineDash([5, 5]);
+            ctx.lineTo(targetX, targetY);
+            ctx.stroke();
+            // Also draw the real reflected part diverging away
+            ctx.setLineDash([]);
+            const dx = hitX - targetX; const dy = hitY - targetY;
+            ctx.lineTo(hitX + dx*5, hitY + dy*5);
+        } else {
+            ctx.lineTo(targetX, targetY);
+        }
+        ctx.stroke();
     }
 
-    requestAnimationFrame(draw);
-}
+    function drawArrow(x, y, h, color, label, isVirtual = false) {
+        ctx.save();
+        if (isVirtual) ctx.globalAlpha = 0.6;
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x, y - h); ctx.stroke();
+        // Head
+        const head = h > 0 ? 10 : -10;
+        ctx.beginPath();
+        ctx.moveTo(x - 6, y - h + head); ctx.lineTo(x, y - h); ctx.lineTo(x + 6, y - h + head);
+        ctx.fill();
+        ctx.font = "bold 10px Arial";
+        ctx.fillText(label, x - 20, y + (h > 0 ? 20 : -h + 20));
+        ctx.restore();
+    }
 
-function drawArrow(x, y, h, color, label, isDash = false) {
-    ctx.save();
-    if(isDash) ctx.setLineDash([5, 5]);
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x, y - h);
-    ctx.stroke();
-    // Arrowhead
-    ctx.beginPath();
-    ctx.moveTo(x - 5, y - h + (h > 0 ? 10 : -10));
-    ctx.lineTo(x, y - h);
-    ctx.lineTo(x + 5, y - h + (h > 0 ? 10 : -10));
-    ctx.fill();
-    ctx.fillText(label, x - 20, y + (h > 0 ? 20 : -h + 20));
-    ctx.restore();
-}
+    function drawPoint(x, y, txt) {
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+        ctx.font = "10px Arial";
+        ctx.fillText(txt, x - 5, y - 10);
+    }
 
-function drawPoint(x, y, label) {
-    ctx.fillStyle = "white";
-    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
-    ctx.fillText(label, x - 5, y + 20);
-}
+    function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 
-draw();
+    draw();
 </script>
 </body>
 </html>
