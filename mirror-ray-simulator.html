@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Mirror Ray Diagram Simulator</title>
+
+<style>
+
+body{
+background:#0f172a;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+canvas{
+background:black;
+border:2px solid white;
+margin-top:20px;
+}
+
+.controls{
+margin-top:20px;
+}
+
+button{
+padding:8px;
+margin:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Mirror Ray Diagram Simulator</h1>
+
+<p>Move the object and change mirror type.</p>
+
+<div class="controls">
+
+<button onclick="setMirror('concave')">Concave</button>
+<button onclick="setMirror('convex')">Convex</button>
+
+<br><br>
+
+Object Distance
+
+<br>
+
+<input type="range" min="80" max="420" value="200" id="obj" oninput="draw()">
+
+</div>
+
+<canvas id="canvas" width="800" height="400"></canvas>
+
+<script>
+
+let mirrorType="concave";
+
+function setMirror(type){
+mirrorType=type;
+draw();
+}
+
+function draw(){
+
+let canvas=document.getElementById("canvas");
+let ctx=canvas.getContext("2d");
+
+ctx.clearRect(0,0,800,400);
+
+let mirrorX=600;
+let axisY=200;
+
+let objX=parseInt(document.getElementById("obj").value);
+let objHeight=60;
+
+let focal=120;
+let center=240;
+
+ctx.strokeStyle="white";
+
+ctx.beginPath();
+ctx.moveTo(0,axisY);
+ctx.lineTo(800,axisY);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(mirrorX,50);
+ctx.lineTo(mirrorX,350);
+ctx.stroke();
+
+ctx.fillStyle="cyan";
+
+let F = mirrorType==="concave" ? mirrorX-focal : mirrorX+focal;
+let C = mirrorType==="concave" ? mirrorX-center : mirrorX+center;
+
+ctx.beginPath();
+ctx.arc(F,axisY,5,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillText("F",F-5,axisY+15);
+
+ctx.beginPath();
+ctx.arc(C,axisY,5,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillText("C",C-5,axisY+15);
+
+ctx.strokeStyle="yellow";
+
+ctx.beginPath();
+ctx.moveTo(objX,axisY);
+ctx.lineTo(objX,axisY-objHeight);
+ctx.stroke();
+
+let u=mirrorX-objX;
+let f=mirrorType==="concave" ? -focal : focal;
+
+let v=1/((1/f)-(1/u));
+
+let imageX=mirrorX-v;
+let imageHeight=-(v/u)*objHeight;
+
+ctx.strokeStyle="lime";
+
+ctx.beginPath();
+ctx.moveTo(imageX,axisY);
+ctx.lineTo(imageX,axisY-imageHeight);
+ctx.stroke();
+
+ctx.strokeStyle="red";
+
+ctx.beginPath();
+ctx.moveTo(objX,axisY-objHeight);
+ctx.lineTo(mirrorX,axisY-objHeight);
+ctx.stroke();
+
+if(mirrorType==="concave"){
+
+ctx.beginPath();
+ctx.moveTo(mirrorX,axisY-objHeight);
+ctx.lineTo(F,axisY);
+ctx.stroke();
+
+}
+
+else{
+
+ctx.beginPath();
+ctx.moveTo(mirrorX,axisY-objHeight);
+ctx.lineTo(F,axisY);
+ctx.setLineDash([5,5]);
+ctx.stroke();
+
+ctx.setLineDash([]);
+
+}
+
+}
+
+draw();
+
+</script>
+
+</body>
+
+</html>
