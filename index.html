@@ -4,25 +4,210 @@
 <head>
   <meta name="google-site-verification" content="7suOZ7knYKu9N2oXc3_gt4adWy3y_u59TjAIRngOmA0" />
 <title>Visual Science Mind Labs</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0f172a;
+color:white;
+}
+
+header{
+background:#020617;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+}
+
+nav a{
+color:white;
+margin:10px;
+text-decoration:none;
+font-weight:bold;
+}
+
+.search-bar{
+margin-top:10px;
+}
+
+.search-bar input{
+padding:8px;
+width:200px;
+border-radius:5px;
+border:none;
+}
+
+.hero{
+text-align:center;
+padding:80px 20px;
+background:linear-gradient(135deg,#1e3a8a,#9333ea);
+}
+
+.hero h2{
+font-size:40px;
+}
+
+.section{
+padding:60px 20px;
+text-align:center;
+}
+
+.cards{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+width:250px;
+}
+
+.card img{
+width:100%;
+border-radius:8px;
+}
+
+.button{
+display:inline-block;
+margin-top:15px;
+padding:10px 20px;
+background:#6366f1;
+color:white;
+border-radius:6px;
+text-decoration:none;
+}
+
+.tools{
+margin-top:30px;
+}
+
+.tools a{
+display:block;
+margin:10px;
+color:#93c5fd;
+text-decoration:none;
+}
+
+footer{
+background:#020617;
+text-align:center;
+padding:20px;
+margin-top:40px;
+}
+
+</style>
+
+<script>
+
+function searchSite(){
+let input=document.getElementById("search").value.toLowerCase();
+
+if(input.includes("mirror")){
+window.location.href="mirror-simulator.html";
+}
+
+}
+
+</script>
+
 </head>
 
 <body>
 
-<h1>Visual Science Mind Labs</h1>
+<header>
 
-<p>Welcome! This website explains Class 10 science and math with visuals.</p>
+<h2>Visual Science Mind Labs</h2>
 
-<h2>Sections</h2>
+<nav>
 
-<ul>
-<li>Physics simulations</li>
-<li>Chemistry notes</li>
-<li>Math visual explanations</li>
-<li>Video notes</li>
-</ul>
+<a href="#">Home</a>
+<a href="#">Physics</a>
+<a href="#">Math</a>
+<a href="#">Chemistry</a>
+<a href="#">Simulations</a>
 
-<p>More content coming soon.</p>
+</nav>
+
+<div class="search-bar">
+
+<input id="search" placeholder="Search simulations or topics">
+
+<button onclick="searchSite()">Search</button>
+
+</div>
+
+</header>
+
+<section class="hero">
+
+<h2>Learn Science Visually</h2>
+
+<p>Interactive tools, simulations, and visual notes for students.</p>
+
+<a class="button" href="mirror-simulator.html">Try Mirror Simulator</a>
+
+</section>
+
+<section class="section">
+
+<h2>Subjects</h2>
+
+<div class="cards">
+
+<div class="card">
+<img src="https://images.unsplash.com/photo-1509228468518-180dd4864904">
+<h3>Physics</h3>
+<p>Explore light, mirrors, lenses and motion.</p>
+<a class="button" href="#">Open</a>
+</div>
+
+<div class="card">
+<img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb">
+<h3>Mathematics</h3>
+<p>Visual graphs and equation tools.</p>
+<a class="button" href="#">Open</a>
+</div>
+
+<div class="card">
+<img src="https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6">
+<h3>Chemistry</h3>
+<p>Reactions and formula visualizations.</p>
+<a class="button" href="#">Open</a>
+</div>
+
+</div>
+
+</section>
+
+<section class="section">
+
+<h2>Interactive Tools</h2>
+
+<div class="tools">
+
+<a href="mirror-simulator.html">🔬 Mirror Formula Simulator</a>
+
+<p>More simulations coming soon.</p>
+
+</div>
+
+</section>
+
+<footer>
+
+<p>© 2026 Visual Science Mind Labs</p>
+
+</footer>
 
 </body>
 
 </html>
+
