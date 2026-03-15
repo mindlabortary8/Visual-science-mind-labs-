@@ -8,25 +8,48 @@
 <style>
 
 body{
-background:#0f172a;
-color:white;
+margin:0;
 font-family:Arial;
+background:#020617;
+color:white;
 text-align:center;
+overflow:hidden;
+}
+
+#bg{
+position:fixed;
+top:0;
+left:0;
+z-index:-1;
 }
 
 canvas{
-background:black;
 border:2px solid white;
+background:rgba(0,0,0,0.6);
 margin-top:20px;
 }
 
 .controls{
-margin-top:20px;
+margin-top:15px;
 }
 
 button{
-padding:8px;
+padding:8px 14px;
 margin:5px;
+border:none;
+border-radius:6px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+}
+
+input{
+width:300px;
+}
+
+.info{
+margin-top:10px;
+font-size:18px;
 }
 
 </style>
@@ -35,14 +58,14 @@ margin:5px;
 
 <body>
 
-<h1>Mirror Ray Diagram Simulator</h1>
+<canvas id="bg"></canvas>
 
-<p>Move the object and change mirror type.</p>
+<h1>Mirror Ray Diagram Simulator</h1>
 
 <div class="controls">
 
-<button onclick="setMirror('concave')">Concave</button>
-<button onclick="setMirror('convex')">Convex</button>
+<button onclick="setMirror('concave')">Concave Mirror</button>
+<button onclick="setMirror('convex')">Convex Mirror</button>
 
 <br><br>
 
@@ -50,119 +73,222 @@ Object Distance
 
 <br>
 
-<input type="range" min="80" max="420" value="200" id="obj" oninput="draw()">
+<input type="range" min="80" max="500" value="250" id="obj" oninput="draw()">
 
 </div>
 
-<canvas id="canvas" width="800" height="400"></canvas>
+<div class="info" id="caseText"></div>
+
+<canvas id="sim" width="900" height="420"></canvas>
 
 <script>
 
-let mirrorType="concave";
+/* -------- animated background -------- */
 
-function setMirror(type){
-mirrorType=type;
-draw();
+let bg=document.getElementById("bg");
+let bgc=bg.getContext("2d");
+
+bg.width=window.innerWidth;
+bg.height=window.innerHeight;
+
+let stars=[];
+
+for(let i=0;i<120;i++){
+
+stars.push({
+x:Math.random()*bg.width,
+y:Math.random()*bg.height,
+r:Math.random()*2,
+v:Math.random()*0.5
+})
+
+}
+
+function animateBG(){
+
+bgc.clearRect(0,0,bg.width,bg.height)
+
+bgc.fillStyle="white"
+
+stars.forEach(s=>{
+
+bgc.beginPath()
+bgc.arc(s.x,s.y,s.r,0,Math.PI*2)
+bgc.fill()
+
+s.y+=s.v
+
+if(s.y>bg.height) s.y=0
+
+})
+
+requestAnimationFrame(animateBG)
+
+}
+
+animateBG()
+
+/* -------- physics simulator -------- */
+
+let mirrorType="concave"
+
+function setMirror(t){
+mirrorType=t
+draw()
 }
 
 function draw(){
 
-let canvas=document.getElementById("canvas");
-let ctx=canvas.getContext("2d");
+let canvas=document.getElementById("sim")
+let ctx=canvas.getContext("2d")
 
-ctx.clearRect(0,0,800,400);
+ctx.clearRect(0,0,900,420)
 
-let mirrorX=600;
-let axisY=200;
+let axisY=220
+let mirrorX=650
 
-let objX=parseInt(document.getElementById("obj").value);
-let objHeight=60;
+let objX=parseInt(document.getElementById("obj").value)
 
-let focal=120;
-let center=240;
+let objHeight=70
 
-ctx.strokeStyle="white";
+let focal=120
+let center=240
 
-ctx.beginPath();
-ctx.moveTo(0,axisY);
-ctx.lineTo(800,axisY);
-ctx.stroke();
+/* principal axis */
 
-ctx.beginPath();
-ctx.moveTo(mirrorX,50);
-ctx.lineTo(mirrorX,350);
-ctx.stroke();
+ctx.strokeStyle="white"
 
-ctx.fillStyle="cyan";
+ctx.beginPath()
+ctx.moveTo(0,axisY)
+ctx.lineTo(900,axisY)
+ctx.stroke()
 
-let F = mirrorType==="concave" ? mirrorX-focal : mirrorX+focal;
-let C = mirrorType==="concave" ? mirrorX-center : mirrorX+center;
+ctx.fillText("Principal Axis",10,axisY-5)
 
-ctx.beginPath();
-ctx.arc(F,axisY,5,0,Math.PI*2);
-ctx.fill();
+/* curved mirror */
 
-ctx.fillText("F",F-5,axisY+15);
-
-ctx.beginPath();
-ctx.arc(C,axisY,5,0,Math.PI*2);
-ctx.fill();
-
-ctx.fillText("C",C-5,axisY+15);
-
-ctx.strokeStyle="yellow";
-
-ctx.beginPath();
-ctx.moveTo(objX,axisY);
-ctx.lineTo(objX,axisY-objHeight);
-ctx.stroke();
-
-let u=mirrorX-objX;
-let f=mirrorType==="concave" ? -focal : focal;
-
-let v=1/((1/f)-(1/u));
-
-let imageX=mirrorX-v;
-let imageHeight=-(v/u)*objHeight;
-
-ctx.strokeStyle="lime";
-
-ctx.beginPath();
-ctx.moveTo(imageX,axisY);
-ctx.lineTo(imageX,axisY-imageHeight);
-ctx.stroke();
-
-ctx.strokeStyle="red";
-
-ctx.beginPath();
-ctx.moveTo(objX,axisY-objHeight);
-ctx.lineTo(mirrorX,axisY-objHeight);
-ctx.stroke();
+ctx.strokeStyle="white"
+ctx.beginPath()
 
 if(mirrorType==="concave"){
 
-ctx.beginPath();
-ctx.moveTo(mirrorX,axisY-objHeight);
-ctx.lineTo(F,axisY);
-ctx.stroke();
+ctx.arc(mirrorX+80,axisY,200,Math.PI*0.65,Math.PI*1.35)
+
+}else{
+
+ctx.arc(mirrorX-80,axisY,200,-Math.PI*0.35,Math.PI*0.35)
 
 }
 
-else{
+ctx.stroke()
 
-ctx.beginPath();
-ctx.moveTo(mirrorX,axisY-objHeight);
-ctx.lineTo(F,axisY);
-ctx.setLineDash([5,5]);
-ctx.stroke();
+/* pole */
 
-ctx.setLineDash([]);
+let P=mirrorX
+
+ctx.fillStyle="cyan"
+
+ctx.beginPath()
+ctx.arc(P,axisY,5,0,Math.PI*2)
+ctx.fill()
+
+ctx.fillText("P",P-5,axisY+18)
+
+/* focal and center */
+
+let F = mirrorType==="concave" ? mirrorX-focal : mirrorX+focal
+let C = mirrorType==="concave" ? mirrorX-center : mirrorX+center
+
+ctx.beginPath()
+ctx.arc(F,axisY,5,0,Math.PI*2)
+ctx.fill()
+ctx.fillText("F",F-5,axisY+18)
+
+ctx.beginPath()
+ctx.arc(C,axisY,5,0,Math.PI*2)
+ctx.fill()
+ctx.fillText("C",C-5,axisY+18)
+
+/* object */
+
+ctx.strokeStyle="yellow"
+
+ctx.beginPath()
+ctx.moveTo(objX,axisY)
+ctx.lineTo(objX,axisY-objHeight)
+ctx.stroke()
+
+ctx.fillText("Object (O)",objX-25,axisY-objHeight-10)
+
+/* mirror formula */
+
+let u=mirrorX-objX
+let f=mirrorType==="concave" ? -focal : focal
+
+let v=1/((1/f)-(1/u))
+
+let imageX=mirrorX-v
+let imageHeight=-(v/u)*objHeight
+
+/* image */
+
+ctx.strokeStyle="lime"
+
+ctx.beginPath()
+ctx.moveTo(imageX,axisY)
+ctx.lineTo(imageX,axisY-imageHeight)
+ctx.stroke()
+
+ctx.fillText("Image (I)",imageX-20,axisY-imageHeight-10)
+
+/* rays */
+
+ctx.strokeStyle="red"
+
+/* ray parallel */
+
+ctx.beginPath()
+ctx.moveTo(objX,axisY-objHeight)
+ctx.lineTo(mirrorX,axisY-objHeight)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(mirrorX,axisY-objHeight)
+ctx.lineTo(F,axisY)
+ctx.stroke()
+
+/* ray through F */
+
+ctx.beginPath()
+ctx.moveTo(objX,axisY-objHeight)
+ctx.lineTo(F,axisY)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(mirrorX,axisY-objHeight)
+ctx.lineTo(mirrorX-300,axisY-objHeight)
+ctx.stroke()
+
+/* ray through C */
+
+ctx.strokeStyle="orange"
+
+ctx.beginPath()
+ctx.moveTo(objX,axisY-objHeight)
+ctx.lineTo(C,axisY)
+ctx.lineTo(mirrorX,axisY-objHeight)
+ctx.stroke()
+
+/* magnification */
+
+let m = -v/u
+
+document.getElementById("caseText").innerHTML =
+"Magnification: "+m.toFixed(2)
 
 }
 
-}
-
-draw();
+draw()
 
 </script>
 
