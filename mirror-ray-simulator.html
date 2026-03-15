@@ -3,218 +3,36 @@
 
 <head>
 
-<title>Mirror Ray Simulator</title>
+<title>Mirror Ray Diagram Simulator</title>
 
-<style>
-
-body{
-background:#020617;
-color:white;
-font-family:Arial;
-text-align:center;
-}
-
-canvas{
-background:black;
-border:2px solid white;
-margin-top:20px;
-}
-
-button{
-padding:8px 15px;
-margin:5px;
-}
-
-#case{
-margin-top:10px;
-font-size:18px;
-}
-
-</style>
+<link rel="stylesheet" href="mirror.css">
 
 </head>
 
 <body>
 
-<h1>Interactive Mirror Ray Diagram</h1>
+<h1>Mirror Ray Diagram Simulator</h1>
 
-<button onclick="setMirror('concave')">Concave</button>
-<button onclick="setMirror('convex')">Convex</button>
+<div class="controls">
+
+<button onclick="setMirror('concave')">Concave Mirror</button>
+<button onclick="setMirror('convex')">Convex Mirror</button>
 
 <br><br>
 
-Object Distance
+<label>Object Distance</label>
 
 <br>
 
-<input type="range" min="50" max="650" value="300" id="obj" oninput="draw()">
+<input type="range" id="objectSlider" min="50" max="750" value="300">
 
-<div id="case"></div>
+</div>
 
-<canvas id="sim" width="1100" height="500"></canvas>
+<div id="caseText"></div>
 
-<script>
+<canvas id="canvas" width="1200" height="550"></canvas>
 
-let mirrorType="concave"
-
-function setMirror(t){
-mirrorType=t
-draw()
-}
-
-function draw(){
-
-let canvas=document.getElementById("sim")
-let ctx=canvas.getContext("2d")
-
-ctx.clearRect(0,0,1100,500)
-
-let axisY=260
-let mirrorX=800
-
-let objX=parseInt(document.getElementById("obj").value)
-let objHeight=90
-
-let focal=160
-let center=320
-
-/* axis */
-
-ctx.strokeStyle="white"
-ctx.beginPath()
-ctx.moveTo(0,axisY)
-ctx.lineTo(1100,axisY)
-ctx.stroke()
-
-/* mirror */
-
-ctx.beginPath()
-
-if(mirrorType==="concave"){
-ctx.arc(mirrorX+120,axisY,300,Math.PI*0.65,Math.PI*1.35)
-}else{
-ctx.arc(mirrorX-120,axisY,300,-Math.PI*0.35,Math.PI*0.35)
-}
-
-ctx.stroke()
-
-/* P F C */
-
-let P=mirrorX
-let F=mirrorType==="concave"?mirrorX-focal:mirrorX+focal
-let C=mirrorType==="concave"?mirrorX-center:mirrorX+center
-
-ctx.fillStyle="cyan"
-
-;[P,F,C].forEach((x,i)=>{
-ctx.beginPath()
-ctx.arc(x,axisY,5,0,Math.PI*2)
-ctx.fill()
-})
-
-ctx.fillText("P",P-5,axisY+20)
-ctx.fillText("F",F-5,axisY+20)
-ctx.fillText("C",C-5,axisY+20)
-
-/* object */
-
-ctx.strokeStyle="yellow"
-
-ctx.beginPath()
-ctx.moveTo(objX,axisY)
-ctx.lineTo(objX,axisY-objHeight)
-ctx.stroke()
-
-ctx.fillText("Object",objX-20,axisY-objHeight-10)
-
-/* mirror formula */
-
-let u=mirrorX-objX
-let f=mirrorType==="concave"?-focal:focal
-
-let v=1/((1/f)-(1/u))
-
-let imageX=mirrorX-v
-let imageHeight=-(v/u)*objHeight
-
-/* image */
-
-ctx.strokeStyle="lime"
-
-ctx.beginPath()
-ctx.moveTo(imageX,axisY)
-ctx.lineTo(imageX,axisY-imageHeight)
-ctx.stroke()
-
-ctx.fillText("Image",imageX-20,axisY-imageHeight-10)
-
-/* principal rays */
-
-ctx.strokeStyle="red"
-
-/* ray parallel */
-
-ctx.beginPath()
-ctx.moveTo(objX,axisY-objHeight)
-ctx.lineTo(mirrorX,axisY-objHeight)
-ctx.stroke()
-
-/* reflected through F */
-
-ctx.beginPath()
-ctx.moveTo(mirrorX,axisY-objHeight)
-ctx.lineTo(F,axisY)
-ctx.stroke()
-
-/* ray through F */
-
-ctx.beginPath()
-ctx.moveTo(objX,axisY-objHeight)
-ctx.lineTo(F,axisY)
-ctx.stroke()
-
-/* reflected parallel */
-
-ctx.beginPath()
-ctx.moveTo(mirrorX,axisY-objHeight)
-ctx.lineTo(mirrorX-400,axisY-objHeight)
-ctx.stroke()
-
-/* ray through C */
-
-ctx.strokeStyle="orange"
-
-ctx.beginPath()
-ctx.moveTo(objX,axisY-objHeight)
-ctx.lineTo(C,axisY)
-ctx.lineTo(mirrorX,axisY-objHeight)
-ctx.stroke()
-
-/* case detection */
-
-let caseText=""
-
-if(mirrorType==="concave"){
-
-if(objX < C-20) caseText="Object beyond C → image between F and C (real, inverted)"
-else if(Math.abs(objX-C)<20) caseText="Object at C → image at C (same size)"
-else if(objX > C && objX < F) caseText="Object between C and F → image beyond C"
-else if(Math.abs(objX-F)<20) caseText="Object at F → image at infinity"
-else if(objX > F) caseText="Object between F and P → virtual upright image"
-
-}else{
-
-caseText="Convex mirror → virtual upright image always between P and F"
-
-}
-
-document.getElementById("case").innerText=caseText
-
-}
-
-draw()
-
-</script>
+<script src="mirror.js"></script>
 
 </body>
 
