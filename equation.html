@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics & Roots Lab</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --accent: #f43f5e;
+            --bg: #020617;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: white;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            margin: auto;
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 40px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+        }
+
+        input {
+            background: #0f172a;
+            border: 2px solid #334155;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            width: 110px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .stage {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 300px;
+            border-bottom: 4px solid #334155;
+            margin-bottom: 40px;
+        }
+
+        .side {
+            width: 45%;
+            display: flex;
+            flex-wrap: wrap-reverse;
+            justify-content: center;
+            align-content: flex-start;
+            gap: 8px;
+            min-height: 100px;
+            padding: 20px;
+        }
+
+        .obj {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: spawn 0.5s ease-out forwards;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+
+        .obj-x { background: linear-gradient(135deg, var(--primary), #4338ca); border: 1px solid rgba(255,255,255,0.2); }
+        .obj-c { background: linear-gradient(135deg, var(--accent), #be123c); border-radius: 50%; width: 22px; height: 22px; }
+
+        @keyframes spawn {
+            from { transform: scale(0) translateY(30px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .math-display {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: -2px;
+        }
+
+        .info { text-align: center; color: #94a3b8; margin-bottom: 30px; font-size: 1.2rem; }
+
+        .btn {
+            background: white;
+            color: black;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .btn:active { transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <input type="text" id="aInp" value="sqrt(4)" title="Try sqrt(9) or 2"> <span>x</span>
+        <select id="opInp" style="padding:10px; border-radius:10px; background: #1e293b; color: white; border: 1px solid #334155;">
+            <option value="+">+</option>
+            <option value="-">-</option>
+        </select>
+        <input type="text" id="bInp" value="2"> <span>=</span>
+        <input type="text" id="cInp" value="8">
+        <button class="btn" onclick="buildEquation()" style="background: var(--primary); color: white; margin-left: 10px;">Load Engine</button>
+    </div>
+
+    <div class="stage">
+        <div id="leftSide" class="side"></div>
+        <div style="font-size: 3rem; padding-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));">⚖️</div>
+        <div id="rightSide" class="side"></div>
+    </div>
+
+    <div class="math-display" id="mathOut">? = ?</div>
+    <p class="info" id="infoOut">Type <b>sqrt(n)</b> to use roots!</p>
+
+    <div style="display:flex; gap:15px; justify-content:center;">
+        <button class="btn" onclick="changeStep(-1)" style="background:#1e293b; color:white;">Back</button>
+        <button class="btn" onclick="changeStep(1)">Next Step →</button>
+    </div>
+</div>
+
+<script>
+    let stepIdx = 0;
+    let steps = [];
+
+    // The Parser that supports sqrt()
+    function parse(val) {
+        val = val.toLowerCase().replace(/\s/g, '');
+        if(val.includes('sqrt(')) {
+            let n = parseFloat(val.replace('sqrt(', '').replace(')', ''));
+            return { v: Math.sqrt(n), d: `√${n}`, isRoot: true };
+        }
+        return { v: parseFloat(val), d: val, isRoot: false };
+    }
+
+    function buildEquation() {
+        const a = parse(document.getElementById('aInp').value);
+        const op = document.getElementById('opInp').value;
+        const b = parse(document.getElementById('bInp').value);
+        const c = parse(document.getElementById('cInp').value);
+
+        if(isNaN(a.v) || isNaN(b.v) || isNaN(c.v)) {
+            alert("Please enter numbers or sqrt(n)"); return;
+        }
+
+        steps = [];
+        
+        // STEP 1: INITIAL STATE
+        steps.push({
+            m: `${a.d}x ${op} ${b.d} = ${c.d}`,
+            i: `The scale balances ${a.d} groups of x with ${b.d} units.`,
+            lx: Math.ceil(a.v), lx_label: a.d + 'x',
+            lc: Math.round(b.v), lc_label: b.d,
+            rc: Math.round(c.v), rc_label: c.d
+        });
+
+        // STEP 2: INVERSE OPERATION
+        const invOp = op === '+' ? '-' : '+';
+        const finalCValue = op === '+' ? (c.v - b.v) : (c.v + b.v);
+        steps.push({
+            m: `${a.d}x = ${c.v} ${invOp} ${b.v}`,
+            i: `Removing the constant ${b.d} by applying ${invOp} to both sides.`,
+            lx: Math.ceil(a.v), lx_label: a.d + 'x',
+            lc: 0, lc_label: '',
+            rc: Math.round(finalCValue), rc_label: finalCValue.toFixed(1)
+        });
+
+        // STEP 3: FINAL DIVISION
+        const res = finalCValue / a.v;
+        steps.push({
+            m: `x = ${res.toFixed(2)}`,
+            i: `Divide the remaining units by ${a.d} to find the value of one x.`,
+            lx: 1, lx_label: 'x',
+            lc: 0, lc_label: '',
+            rc: Math.round(res), rc_label: res.toFixed(2)
+        });
+
+        stepIdx = 0;
+        render();
+    }
+
+    function render() {
+        const s = steps[stepIdx];
+        if(!s) return;
+
+        document.getElementById('mathOut').innerText = s.m;
+        document.getElementById('infoOut').innerText = s.i;
+
+        const l = document.getElementById('leftSide');
+        const r = document.getElementById('rightSide');
+        
+        l.innerHTML = ''; r.innerHTML = '';
+
+        // Render X Objects
+        for(let i=0; i<s.lx; i++) {
+            let div = document.createElement('div');
+            div.className = 'obj obj-x';
+            div.innerText = s.lx_label;
+            l.appendChild(div);
+        }
+
+        // Render Constant Objects (Left)
+        for(let i=0; i<s.lc; i++) {
+            let div = document.createElement('div');
+            div.className = 'obj obj-c';
+            div.title = s.lc_label;
+            l.appendChild(div);
+        }
+
+        // Render Constant Objects (Right)
+        // If result is large, we show one block with the number to avoid lag
+        if(s.rc > 30) {
+            let div = document.createElement('div');
+            div.className = 'obj obj-c';
+            div.style.width = '80px';
+            div.style.borderRadius = '10px';
+            div.innerText = s.rc_label;
+            r.appendChild(div);
+        } else {
+            for(let i=0; i<s.rc; i++) {
+                let div = document.createElement('div');
+                div.className = 'obj obj-c';
+                r.appendChild(div);
+            }
+        }
+    }
+
+    function changeStep(d) {
+        stepIdx = Math.max(0, Math.min(steps.length - 1, stepIdx + d));
+        render();
+    }
+</script>
+</body>
+</html>
+
