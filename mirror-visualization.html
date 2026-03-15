@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Mirror Formula Visualization</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+text-align:center;
+}
+
+.container{
+margin-top:40px;
+}
+
+.box{
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+width:320px;
+margin:20px auto;
+}
+
+input{
+width:250px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Mirror Formula Visualization</h1>
+
+<p>Move the sliders to see how the image distance changes.</p>
+
+<div class="container">
+
+<div class="box">
+
+<label>Object Distance (u)</label><br>
+<input type="range" min="-100" max="-5" value="-20" id="u" oninput="calculate()">
+
+<p id="uvalue"></p>
+
+</div>
+
+<div class="box">
+
+<label>Focal Length (f)</label><br>
+<input type="range" min="-50" max="50" value="-10" id="f" oninput="calculate()">
+
+<p id="fvalue"></p>
+
+</div>
+
+<div class="box">
+
+<h3>Results</h3>
+
+<p id="v"></p>
+<p id="m"></p>
+
+</div>
+
+</div>
+
+<script>
+
+function calculate(){
+
+let u=parseFloat(document.getElementById("u").value);
+let f=parseFloat(document.getElementById("f").value);
+
+let v=1/((1/f)-(1/u));
+
+let m=v/u;
+
+document.getElementById("uvalue").innerText="Object distance (u) = "+u;
+
+document.getElementById("fvalue").innerText="Focal length (f) = "+f;
+
+document.getElementById("v").innerText="Image distance (v) = "+v.toFixed(2);
+
+document.getElementById("m").innerText="Magnification (m) = "+m.toFixed(2);
+
+}
+
+calculate();
+
+</script>
+
+</body>
+
+</html>
