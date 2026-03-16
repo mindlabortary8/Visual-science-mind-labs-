@@ -138,10 +138,18 @@ window.location.href="mirror-simulator.html";
 
 <div class="search-bar">
 
-<input id="search" placeholder="Search simulations or topics">
+<div style="margin:30px;text-align:center;">
 
-<button onclick="searchSite()">Search</button>
+<input
+type="text"
+id="searchInput"
+placeholder="Search physics or math tools..."
+style="padding:10px;width:280px;font-size:16px;"
+onkeyup="searchSite()">
 
+<div id="results" style="margin-top:20px;"></div>
+
+</div>
 </div>
 
 </header>
@@ -207,6 +215,75 @@ window.location.href="mirror-simulator.html";
 
 </footer>
 
+  <script>
+
+const pages = [
+
+{
+name:"Mirror Ray Simulator",
+link:"mirror.html",
+keywords:["mirror","physics","ray","concave","convex"]
+},
+
+{
+name:"Physics Tools",
+link:"physics.html",
+keywords:["physics","light","optics"]
+},
+
+{
+name:"Equation Visualizer",
+link:"equation.html",
+keywords:["equation","algebra","solve"]
+},
+
+{
+name:"Quadratic Graph Visualizer",
+link:"quadratic.html",
+keywords:["quadratic","graph","parabola","math"]
+},
+
+{
+name:"Math Tools",
+link:"math.html",
+keywords:["math","mathematics"]
+}
+
+]
+
+function searchSite(){
+
+let query=document.getElementById("searchInput").value.toLowerCase()
+
+let results=document.getElementById("results")
+
+results.innerHTML=""
+
+if(query==="") return
+
+pages.forEach(page=>{
+
+if(page.keywords.some(k=>k.includes(query))){
+
+let item=document.createElement("div")
+
+item.innerHTML=
+`<a href="${page.link}" style="color:#60a5fa;font-size:18px;text-decoration:none;">
+${page.name}
+</a>`
+
+item.style.margin="10px"
+
+results.appendChild(item)
+
+}
+
+})
+
+}
+
+  </script>
+  
 </body>
 
 </html>
