@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Math Lab</title>
+    <style>
+        :root {
+            --p1: #6366f1; --p2: #f43f5e; --bg: #020617; 
+            --glass: rgba(15, 23, 42, 0.9);
+        }
+        body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: white; overflow: hidden; }
+        
+        canvas { width: 100vw; height: 100vh; display: block; }
+
+        /* Compact Header UI */
+        .control-panel {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 400px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 10px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+        }
+
+        .inputs-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .line-section {
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            border-top: 3px solid var(--p1);
+        }
+        .line-section.l2 { border-color: var(--p2); }
+
+        .row { display: flex; flex-direction: column; margin-bottom: 4px; }
+        .label { display: flex; justify-content: space-between; font-size: 0.65rem; color: #94a3b8; font-weight: bold; }
+        .val { color: #fff; font-family: monospace; }
+
+        input[type=range] { 
+            width: 100%; 
+            accent-color: var(--p1); 
+            cursor: pointer; 
+            height: 12px;
+            margin: 2px 0;
+        }
+        #s-a2, #s-b2, #s-c2 { accent-color: var(--p2); }
+
+        /* Minimal Status Bar */
+        .status-bar {
+            background: rgba(255,255,255,0.05);
+            padding: 6px 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #status-text { font-weight: 800; letter-spacing: 0.5px; }
+        #sol-text { font-weight: 600; color: #10b981; }
+
+        @media (max-width: 480px) {
+            .control-panel { width: 92%; padding: 8px; }
+            .label { font-size: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="control-panel">
+    <div class="inputs-container">
+        <div class="line-section">
+            <div class="row">
+                <div class="label">a₁ <span id="v-a1" class="val">1</span></div>
+                <input type="range" id="s-a1" min="-10" max="10" step="0.5" value="1">
+            </div>
+            <div class="row">
+                <div class="label">b₁ <span id="v-b1" class="val">1</span></div>
+                <input type="range" id="s-b1" min="-10" max="10" step="0.5" value="1">
+            </div>
+            <div class="row">
+                <div class="label">c₁ <span id="v-c1" class="val">5</span></div>
+                <input type="range" id="s-c1" min="-20" max="20" step="1" value="5">
+            </div>
+        </div>
+
+        <div class="line-section l2">
+            <div class="row">
+                <div class="label">a₂ <span id="v-a2" class="val">2</span></div>
+                <input type="range" id="s-a2" min="-10" max="10" step="0.5" value="2">
+            </div>
+            <div class="row">
+                <div class="label">b₂ <span id="v-b2" class="val">2</span></div>
+                <input type="range" id="s-b2" min="-10" max="10" step="0.5" value="2">
+            </div>
+            <div class="row">
+                <div class="label">c₂ <span id="v-c2" class="val">10</span></div>
+                <input type="range" id="s-c2" min="-20" max="20" step="1" value="10">
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <span id="status-text">ANALYZING</span>
+        <span id="sol-text">---</span>
+    </div>
+</div>
+
+<canvas id="graph"></canvas>
+
+<script>
+    const canvas = document.getElementById("graph");
+    const ctx = canvas.getContext("2d");
+    const ids = ['a1', 'b1', 'c1', 'a2', 'b2', 'c2'];
+    const sEls = ids.map(id => document.getElementById('s-' + id));
+    const vEls = ids.map(id => document.getElementById('v-' + id));
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        draw();
+    }
+
+    window.addEventListener('resize', resize);
+    sEls.forEach((s, i) => s.addEventListener('input', () => {
+        vEls[i].innerText = s.value;
+        draw();
+    }));
+
+    function draw() {
+        const [a1, b1, c1, a2, b2, c2] = sEls.map(s => parseFloat(s.value));
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Dynamic scale based on screen width
+        const scale = window.innerWidth < 500 ? 30 : 50;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+
+        // Grid lines
+        ctx.strokeStyle = "rgba(255,255,255,0.05)";
+        ctx.lineWidth = 1;
+        for(let i = -40; i <= 40; i++) {
+            ctx.beginPath(); ctx.moveTo(cx + i * scale, 0); ctx.lineTo(cx + i * scale, canvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, cy + i * scale); ctx.lineTo(canvas.width, cy + i * scale); ctx.stroke();
+        }
+        
+        // Axis lines
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(canvas.width, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, canvas.height); ctx.stroke();
+
+        const det = (a1 * b2) - (a2 * b1);
+        const statusEl = document.getElementById("status-text");
+        const solEl = document.getElementById("sol-text");
+
+        if (Math.abs(det) > 0.0001) {
+            const x = (c1 * b2 - c2 * b1) / det;
+            const y = (a1 * c2 - a2 * c1) / det;
+            statusEl.innerText = "UNIQUE";
+            statusEl.style.color = "#10b981";
+            solEl.innerText = `Sol: (${x.toFixed(1)}, ${y.toFixed(1)})`;
+            solEl.style.color = "#fff";
+
+            ctx.shadowBlur = 15; ctx.shadowColor = "#fff";
+            ctx.fillStyle = "#fff";
+            ctx.beginPath(); ctx.arc(cx + x * scale, cy - y * scale, 5, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 0;
+        } else {
+            const isInfinite = (Math.abs(a1 * c2 - a2 * c1) < 0.001) && (Math.abs(b1 * c2 - b2 * c1) < 0.001);
+            if (isInfinite) {
+                statusEl.innerText = "INFINITE";
+                statusEl.style.color = "#fbbf24";
+                solEl.innerText = "Lines Overlap";
+                solEl.style.color = "#fbbf24";
+            } else {
+                statusEl.innerText = "PARALLEL";
+                statusEl.style.color = "#f43f5e";
+                solEl.innerText = "No Solution";
+                solEl.style.color = "#f43f5e";
+            }
+        }
+
+        function drawLine(a, b, c, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            if (b !== 0) {
+                for (let x = -30; x <= 30; x += 0.5) {
+                    let y = (c - a * x) / b;
+                    let px = cx + x * scale;
+                    let py = cy - y * scale;
+                    if (x === -30) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+            } else {
+                let xVal = c / a;
+                ctx.moveTo(cx + xVal * scale, 0); ctx.lineTo(cx + xVal * scale, canvas.height);
+            }
+            ctx.stroke();
+        }
+
+        drawLine(a1, b1, c1, 'rgba(99, 102, 241, 0.8)');
+        drawLine(a2, b2, c2, 'rgba(244, 63, 94, 0.8)');
+    }
+
+    resize();
+</script>
+</body>
+  </html>
+
