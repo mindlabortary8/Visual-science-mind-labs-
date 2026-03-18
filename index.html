@@ -103,6 +103,48 @@ padding:20px;
 margin-top:40px;
 }
 
+  /* SECTION BOXES */
+
+.section-box{
+background:#0f172a;
+padding:20px;
+margin:20px;
+border-radius:12px;
+box-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+
+/* LINKS */
+
+.section-box a{
+color:#60a5fa;
+font-size:18px;
+text-decoration:none;
+display:block;
+margin:8px 0;
+transition:0.2s;
+}
+
+.section-box a:hover{
+color:#93c5fd;
+transform:translateX(5px);
+}
+
+/* BUTTONS */
+
+.section-box button{
+margin-left:10px;
+background:#ef4444;
+border:none;
+color:white;
+padding:5px 10px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.section-box button:hover{
+background:#dc2626;
+}
+
   
 </style>
 
@@ -211,9 +253,13 @@ onkeyup="searchSite()">
 
 </section>
 
-  <h2> Popular Tools</h2>
+  <div class="section-box">
+
+<h2> Popular Tools</h2>
 <div id="popularBox"></div>
 
+  </div>
+  
 <footer>
 
 <p>© 2026 Visual Science Mind Labs</p>
