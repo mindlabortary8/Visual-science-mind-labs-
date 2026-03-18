@@ -259,5 +259,16 @@
 
     draw();
 </script>
+
+    <script>
+
+let views = JSON.parse(localStorage.getItem("views")) || {}
+
+views["Mirror Simulator"] = (views["Mirror Simulator"] || 0) + 1
+
+localStorage.setItem("views", JSON.stringify(views))
+
+    </script>
+    
 </body>
 </html>
