@@ -211,6 +211,9 @@ onkeyup="searchSite()">
 
 </section>
 
+  <h2> Popular Tools</h2>
+<div id="popularBox"></div>
+
 <footer>
 
 <p>© 2026 Visual Science Mind Labs</p>
@@ -279,6 +282,36 @@ item.style.margin="10px"
 results.appendChild(item)
 
 }
+
+})
+
+}
+
+  </script>
+
+  <script>
+
+let views = JSON.parse(localStorage.getItem("views")) || {}
+
+let popularBox = document.getElementById("popularBox")
+
+if(popularBox){
+
+let tools = [
+{name:"Mirror Simulator",link:"mirror.html"},
+{name:"linear Graph",link:"linear.html"},
+  {name:"Mirror ",link:"mirror.html"},
+]
+
+tools.sort((a,b)=> (views[b.name]||0)-(views[a.name]||0))
+
+tools.forEach(t=>{
+
+let div=document.createElement("div")
+
+div.innerHTML = `<a href="${t.link}">${t.name}</a> (${views[t.name]||0} views)`
+
+popularBox.appendChild(div)
 
 })
 
