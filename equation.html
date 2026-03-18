@@ -265,6 +265,17 @@
         render();
     }
 </script>
+
+    <script>
+
+let views = JSON.parse(localStorage.getItem("views")) || {}
+
+views["Equation Visualization"] = (views["Equation Visualization"] || 0) + 1
+
+localStorage.setItem("views", JSON.stringify(views))
+
+    </script>
+    
 </body>
 </html>
 
