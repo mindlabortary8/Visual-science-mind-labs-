@@ -96,6 +96,16 @@ calculate();
 
 </script>
 
+  <script>
+
+let views = JSON.parse(localStorage.getItem("views")) || {}
+
+views["Mirror visualization"] = (views["Mirror visualization"] || 0) + 1
+
+localStorage.setItem("views", JSON.stringify(views))
+
+  </script>
+
 </body>
 
 </html>
