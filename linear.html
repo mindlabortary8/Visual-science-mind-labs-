@@ -220,6 +220,17 @@
 
     resize();
 </script>
+
+    <script>
+
+let views = JSON.parse(localStorage.getItem("views")) || {}
+
+views["Linear Graph"] = (views["Linear Graph"] || 0) + 1
+
+localStorage.setItem("views", JSON.stringify(views))
+
+    </script>
+    
 </body>
   </html>
 
