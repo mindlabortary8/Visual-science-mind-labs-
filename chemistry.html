@@ -1,0 +1,164 @@
+<html>
+<head>
+<title>Chemistry - Visual Science Mind Labs</title>
+
+<style>
+
+body{
+margin:0;
+background:#020617;
+color:white;
+font-family:Arial;
+}
+
+/* NAVBAR */
+
+.navbar{
+display:flex;
+justify-content:space-between;
+padding:15px;
+background:#0f172a;
+}
+
+.navbar a{
+color:white;
+margin:10px;
+text-decoration:none;
+}
+
+/* TITLE */
+
+h1{
+text-align:center;
+margin-top:20px;
+}
+
+/* CARDS */
+
+.container{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+}
+
+.card{
+background:#0f172a;
+padding:20px;
+margin:15px;
+border-radius:12px;
+width:250px;
+position:relative;
+transition:0.3s;
+}
+
+.card:hover{
+transform:scale(1.05);
+}
+
+/* HEART */
+
+.heart{
+position:absolute;
+top:10px;
+right:10px;
+font-size:20px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.heart:hover{
+color:red;
+transform:scale(1.2);
+}
+
+.card a{
+color:#60a5fa;
+text-decoration:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<div class="navbar">
+
+<h2>Visual Science Mind Labs</h2>
+
+<div>
+<a href="index.html">Home</a>
+<a href="physics.html">Physics</a>
+<a href="math.html">Math</a>
+<a href="chemistry.html">Chemistry</a>
+</div>
+
+</div>
+
+<h1>🧪 Chemistry Tools</h1>
+
+<div class="container">
+
+<!-- CHEMICAL BONDING CARD -->
+
+<div class="card">
+
+<span class="heart" onclick="likeSim('Chemical Bonding','bonding.html', this)">♡</span>
+
+<h3 data-name="Chemical Bonding">⚛ Chemical Bonding</h3>
+
+<a href="bonding.html">Open</a>
+
+</div>
+
+</div>
+
+<!-- SCRIPTS -->
+
+<script>
+
+function likeSim(name,link,el){
+
+let liked = JSON.parse(localStorage.getItem("liked")) || []
+
+if(!liked.some(item=>item.name===name)){
+
+liked.push({name:name,link:link})
+localStorage.setItem("liked", JSON.stringify(liked))
+
+el.innerText="❤️"
+
+}else{
+
+liked = liked.filter(item=>item.name!==name)
+localStorage.setItem("liked", JSON.stringify(liked))
+
+el.innerText="♡"
+
+}
+
+}
+
+</script>
+
+<script>
+
+let liked = JSON.parse(localStorage.getItem("liked")) || []
+
+document.querySelectorAll(".card").forEach(card=>{
+
+let name = card.querySelector("h3").dataset.name
+let heart = card.querySelector(".heart")
+
+if(heart && liked.some(item=>item.name===name)){
+heart.innerText="❤️"
+}
+
+})
+
+</script>
+
+</body>
+</html>
