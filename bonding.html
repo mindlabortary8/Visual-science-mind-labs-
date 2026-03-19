@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quantum Lab | Final Stable</title>
+    <style>
+        :root { --glow: #6366f1; --accent: #22d3ee; }
+        body { margin: 0; background: #010208; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        #nebula { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, #0a1129 0%, #010208 100%); }
+        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.15); }
+        .hud-top {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            padding: 12px 30px; border-radius: 50px; display: flex; gap: 15px; align-items: center; z-index: 100;
+        }
+        input { background: #000; border: 1px solid var(--glow); color: var(--accent); padding: 10px; width: 140px; border-radius: 8px; text-align: center; font-weight: bold; outline: none; }
+        button { background: var(--glow); border: none; color: white; padding: 10px 25px; border-radius: 25px; cursor: pointer; font-weight: 800; text-transform: uppercase; }
+        .dashboard {
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 1000px; padding: 20px; border-radius: 15px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; z-index: 100;
+        }
+        .card { padding: 12px; border-left: 4px solid var(--glow); background: rgba(255,255,255,0.03); border-radius: 6px; }
+        .card h4 { margin: 0; font-size: 0.8rem; color: #94a3b8; }
+        .card p { margin: 5px 0 0; font-weight: bold; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<canvas id="nebula"></canvas>
+<canvas id="mainCanvas"></canvas>
+
+<div class="hud-top glass">
+    <input type="text" id="formula" value="H2O">
+    <button onclick="synthesize()">Synthesize</button>
+</div>
+
+<div class="dashboard glass" id="stats"></div>
+
+<script>
+    const canvas = document.getElementById("mainCanvas");
+    const ctx = canvas.getContext("2d");
+    const nCanvas = document.getElementById("nebula");
+    const nCtx = nCanvas.getContext("2d");
+
+    const PT = {
+        "H":[1,1,1,"#ff4d4d","nm"],"HE":[2,0,1,"#ff9f4d","nb"],"LI":[3,1,2,"#ffeb3b","m"],"BE":[4,2,2,"#cddc39","m"],"B":[5,3,2,"#4caf50","ml"],"C":[6,4,2,"#8bc34a","nm"],"N":[7,5,2,"#00bcd4","nm"],"O":[8,6,2,"#03a9f4","nm"],"F":[9,7,2,"#2196f3","nm"],"NE":[10,0,2,"#3f51b5","nb"],"NA":[11,1,3,"#673ab7","m"],"MG":[12,2,3,"#9c27b0","m"],"AL":[13,3,3,"#e91e63","m"],"SI":[14,4,3,"#795548","ml"],"P":[15,5,3,"#607d8b","nm"],"S":[16,6,3,"#ff5722","nm"],"CL":[17,7,3,"#4caf50","nm"],"K":[19,1,4,"#f44336","m"],"CA":[20,2,4,"#e91e63","m"],"FE":[26,2,4,"#607d8b","m"]
+    };
+
+    let atoms = [], stars = [], time = 0;
+
+    class Star {
+        constructor() { this.x = Math.random()*2000; this.y = Math.random()*2000; this.v = Math.random()*0.2; }
+        draw() {
+            this.x -= this.v; if(this.x < 0) this.x = window.innerWidth;
+            nCtx.fillStyle = "rgba(255,255,255,0.3)";
+            nCtx.beginPath(); nCtx.arc(this.x, this.y, 1, 0, Math.PI*2); nCtx.fill();
+        }
+    }
+
+    class Atom {
+        constructor(sym, x, y) {
+            this.sym = sym.toUpperCase();
+            const d = PT[this.sym] || [0,4,3,"#6366f1","nm"];
+            this.z = d[0]; this.v = d[1]; this.s = d[2]; this.c = d[3]; this.t = d[4];
+            this.x = x; this.y = y; this.charge = 0;
+        }
+        draw() {
+            for(let i=1; i<=this.s; i++) {
+                ctx.beginPath(); ctx.strokeStyle = "rgba(255,255,255,0.06)";
+                ctx.arc(this.x, this.y, 30+(i*22), 0, Math.PI*2); ctx.stroke();
+            }
+            let g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, 30);
+            g.addColorStop(0, this.c); g.addColorStop(1, 'transparent');
+            ctx.fillStyle = g; ctx.beginPath(); ctx.arc(this.x, this.y, 30, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "white"; ctx.font = "bold 15px Arial"; ctx.fillText(this.sym, this.x, this.y+5);
+            
+            if(this.charge !== 0) {
+                ctx.fillStyle = "#22d3ee"; ctx.font = "bold 20px Arial";
+                ctx.fillText(this.charge > 0 ? "+"+this.charge : this.charge, this.x, this.y - 110);
+            }
+        }
+    }
+
+    function synthesize() {
+        const input = document.getElementById("formula").value;
+        const matches = [...input.matchAll(/([A-Z][a-z]?)(\d*)/g)];
+        let data = matches.map(m => ({ sym: m[1], count: parseInt(m[2]) || 1 }));
+        
+        // Sort to find central atom (lowest count)
+        data.sort((a,b) => a.count - b.count);
+        
+        atoms = [];
+        const cx = window.innerWidth/2, cy = window.innerHeight/2;
+        document.getElementById("stats").innerHTML = "";
+
+        let flatList = [];
+        data.forEach(d => {
+            const info = PT[d.sym.toUpperCase()] || [0,4,3,"#6366f1","nm"];
+            document.getElementById("stats").innerHTML += `<div class="card"><h4>${d.sym}</h4><p>Z: ${info[0]} | Val: ${info[1]}</p></div>`;
+            for(let i=0; i<d.count; i++) flatList.push(d.sym);
+        });
+
+        atoms.push(new Atom(flatList[0], cx, cy));
+        for(let i=1; i<flatList.length; i++) {
+            let ang = ((i-1)/(flatList.length-1)) * Math.PI * 2;
+            let dist = flatList.length === 2 ? 220 : 180;
+            atoms.push(new Atom(flatList[i], cx + Math.cos(ang)*dist, cy + Math.sin(ang)*dist));
+        }
+    }
+
+    function loop() {
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        nCtx.clearRect(0,0,nCanvas.width, nCanvas.height);
+        stars.forEach(s => s.draw());
+        time += 0.04;
+        atoms.forEach(a => a.draw());
+
+        if(atoms.length > 1) {
+            const central = atoms[0];
+            atoms.slice(1).forEach((a, idx) => {
+                if(central.t !== a.t) { // Ionic
+                    let p = (Math.sin(time + idx) + 1) / 2;
+                    let ex = central.x + (a.x - central.x)*p;
+                    let ey = central.y + (a.y - central.y)*p - Math.sin(p*Math.PI)*60;
+                    drawElec(ex, ey, "#fff", 6);
+                    if(p > 0.95) {
+                        central.charge = (central.t === 'm') ? central.v : -a.v;
+                        a.charge = (a.t === 'm') ? a.v : -central.v;
+                    }
+                } else { // Covalent
+                    let mx = (central.x + a.x)/2, my = (central.y + a.y)/2;
+                    for(let j=0; j<2; j++) {
+                        let r = j*Math.PI + time*2.5;
+                        drawElec(mx + Math.cos(r)*35, my + Math.sin(r)*35, "#fbbf24", 5);
+                    }
+                }
+            });
+        }
+        requestAnimationFrame(loop);
+    }
+
+    function drawElec(x, y, col, sz) {
+        ctx.shadowBlur = 10; ctx.shadowColor = col; ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(x, y, sz, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+
+    window.onresize = () => {
+        canvas.width = nCanvas.width = window.innerWidth;
+        canvas.height = nCanvas.height = window.innerHeight;
+        stars = Array.from({length: 100}, () => new Star());
+    };
+    window.onresize(); synthesize(); loop();
+</script>
+</body>
+</html>
+
