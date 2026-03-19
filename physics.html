@@ -36,6 +36,23 @@ text-decoration:none;
 font-size:18px;
 }
 
+  /* HEART ON CARD */
+
+.heart{
+position:absolute;
+top:10px;
+right:10px;
+font-size:20px;
+cursor:pointer;
+color:white;
+transition:0.3s;
+}
+
+.heart:hover{
+color:red;
+transform:scale(1.2);
+}
+  
 </style>
 
 </head>
@@ -48,8 +65,15 @@ font-size:18px;
 
 <h2>Light & Mirrors</h2>
 
-<div class="card">
-<a href="mirror-visualization.html">🔬 Mirror Formula Visualization</a>
+<div class="card" style="position:relative;">
+
+<span class="heart" onclick="likeSim('Mirror Visualization','mirror-visualization.html', this)">
+♡
+</span>
+
+<h3>Mirror  Formula</h3>
+<a href="mirror-visualization.html">Open</a>
+
 </div>
 
   <div class="card">
@@ -65,6 +89,48 @@ font-size:18px;
 <p>New simulations and notes will appear here.</p>
 
 </div>
+
+  <script>
+
+function likeSim(name,link,el){
+
+let liked = JSON.parse(localStorage.getItem("liked")) || []
+
+if(!liked.some(item=>item.name===name)){
+
+liked.push({name:name,link:link})
+localStorage.setItem("liked", JSON.stringify(liked))
+
+el.innerText="❤️"
+
+}else{
+
+liked = liked.filter(item=>item.name!==name)
+localStorage.setItem("liked", JSON.stringify(liked))
+
+el.innerText="♡"
+
+}
+
+}
+
+  </script>
+  <script>
+
+let liked = JSON.parse(localStorage.getItem("liked")) || []
+
+document.querySelectorAll(".heart").forEach(heart=>{
+
+let name = heart.parentElement.querySelector("h3").innerText
+
+if(liked.some(item=>item.name===name)){
+heart.innerText="❤️"
+}
+
+})
+
+  </script>
+  
 
 </body>
 
