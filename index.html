@@ -461,6 +461,34 @@ location.reload()
 }
 
   </script>
+
+  <script>
+
+let lastLink = localStorage.getItem("lastTool")
+let lastName = localStorage.getItem("lastToolName")
+
+let box = document.getElementById("continueBox")
+
+if(box){
+
+if(lastLink && lastName){
+
+box.innerHTML = `
+<div class="item">
+<a href="${lastLink}">▶ Resume: ${lastName}</a>
+</div>
+`
+
+}else{
+
+box.innerHTML = "<p>No recent activity</p>"
+
+}
+
+}
+
+  </script>
+  
   
 </body>
 
