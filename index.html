@@ -419,6 +419,47 @@ popularBox.appendChild(div)
 }
 
   </script>
+
+  <script>
+
+let liked = JSON.parse(localStorage.getItem("liked")) || []
+let box = document.getElementById("likedBox")
+
+if(box){
+
+if(liked.length===0){
+
+box.innerHTML="<p>No liked simulations yet</p>"
+
+}else{
+
+liked.forEach((item,index)=>{
+
+let div=document.createElement("div")
+div.className="item"
+
+div.innerHTML=`
+<a href="${item.link}">${item.name}</a>
+<button onclick="removeLike(${index})">❌</button>
+`
+
+box.appendChild(div)
+
+})
+
+}
+
+}
+
+function removeLike(i){
+
+liked.splice(i,1)
+localStorage.setItem("liked", JSON.stringify(liked))
+location.reload()
+
+}
+
+  </script>
   
 </body>
 
