@@ -73,11 +73,13 @@ margin-top:10px;
 
 <div class="card" style="position:relative;">
 
-<span class="heart" onclick="likeSim('Mirror Visualization','mirror-visualization.html', this)">
-♡
-</span>
+<span class="heart" onclick="likeSim('Mirror Formula','mirror-visualization.html', this)">♡</span>
 
-<h3>🔭 Mirror  Formula</h3>
+<h3 data-name="Mirror Formula">📐 Mirror Formula</h3>
+
+<canvas id="formulaPreview" width="250" height="150"></canvas>
+
+<br>
 <a href="mirror-visualization.html">Open</a>
 
 </div>
@@ -198,6 +200,49 @@ requestAnimationFrame(draw)
 }
 
 draw()
+
+}
+
+  </script>
+
+  <script>
+
+const fCanvas = document.getElementById("formulaPreview")
+
+if(fCanvas){
+
+const ctx = fCanvas.getContext("2d")
+
+let t = 0
+
+function drawFormula(){
+
+ctx.clearRect(0,0,fCanvas.width,fCanvas.height)
+
+// generate changing values
+let u = -50 + Math.sin(t)*20
+let f = -30
+let v = 1 / (1/f - 1/u)
+
+// text styling
+ctx.fillStyle="white"
+ctx.font="14px Arial"
+
+// formula
+ctx.fillText("1/f = 1/v + 1/u", 50, 30)
+
+// values
+ctx.fillText("u = " + u.toFixed(1), 20, 80)
+ctx.fillText("v = " + v.toFixed(1), 140, 80)
+ctx.fillText("f = " + f, 90, 110)
+
+t += 0.05
+
+requestAnimationFrame(drawFormula)
+
+}
+
+drawFormula()
 
 }
 
