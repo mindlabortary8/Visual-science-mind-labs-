@@ -152,7 +152,19 @@ margin-top:10px;
   </div>
   
 </div>
+<div class="card" style="position:relative;">
 
+<span class="heart" onclick="likeSim('Lens Simulator','lens.html', this)">♡</span>
+
+<h3 data-name="Lens Simulator">🔍 Lens Simulator</h3>
+
+<canvas id="lensPreview" width="250" height="150"></canvas>
+
+<br>
+<a href="lens.html">Open</a>
+
+</div>
+  
 <div class="section">
 
 <h2>More Coming Soon</h2>
@@ -258,6 +270,7 @@ draw()
 }
 
   </script>
+  
 
   <script>
 
@@ -301,7 +314,116 @@ drawFormula()
 }
 
   </script>
-  
+
+  <script>
+
+const lCanvas = document.getElementById("lensPreview")
+
+if(lCanvas){
+
+const ctx = lCanvas.getContext("2d")
+
+let t = 0
+let mode = "convex"
+
+// auto switch between convex & concave
+setInterval(()=>{
+mode = (mode === "convex") ? "concave" : "convex"
+},2000)
+
+function draw(){
+
+ctx.clearRect(0,0,250,150)
+
+// axis
+ctx.strokeStyle="white"
+ctx.beginPath()
+ctx.moveTo(0,75)
+ctx.lineTo(250,75)
+ctx.stroke()
+
+// lens
+ctx.strokeStyle="cyan"
+ctx.beginPath()
+ctx.moveTo(125,20)
+ctx.lineTo(125,130)
+ctx.stroke()
+
+// object (moving)
+let objX = 40 + Math.sin(t)*10
+let objY = 75
+
+ctx.strokeStyle="white"
+ctx.beginPath()
+ctx.moveTo(objX,objY)
+ctx.lineTo(objX,objY-25)
+ctx.stroke()
+
+let topX = objX
+let topY = objY - 25
+
+if(mode === "convex"){
+
+// converging rays
+ctx.strokeStyle="red"
+ctx.beginPath()
+ctx.moveTo(topX,topY)
+ctx.lineTo(125,topY)
+ctx.lineTo(200,75)
+ctx.stroke()
+
+ctx.strokeStyle="green"
+ctx.beginPath()
+ctx.moveTo(topX,topY)
+ctx.lineTo(125,75)
+ctx.lineTo(230,110)
+ctx.stroke()
+
+ctx.fillStyle="white"
+ctx.font="10px Arial"
+ctx.fillText("Convex", 95,15)
+
+}else{
+
+// diverging rays
+ctx.strokeStyle="red"
+ctx.beginPath()
+ctx.moveTo(topX,topY)
+ctx.lineTo(125,topY)
+ctx.lineTo(230,topY+20)
+ctx.stroke()
+
+// dashed virtual ray
+ctx.setLineDash([4,4])
+ctx.beginPath()
+ctx.moveTo(125,topY)
+ctx.lineTo(80,75)
+ctx.stroke()
+ctx.setLineDash([])
+
+ctx.strokeStyle="green"
+ctx.beginPath()
+ctx.moveTo(topX,topY)
+ctx.lineTo(125,75)
+ctx.lineTo(230,60)
+ctx.stroke()
+
+ctx.fillStyle="white"
+ctx.font="10px Arial"
+ctx.fillText("Concave", 90,15)
+
+}
+
+t += 0.05
+requestAnimationFrame(draw)
+
+}
+
+draw()
+
+}
+
+  </script>
   
 
 </body>
