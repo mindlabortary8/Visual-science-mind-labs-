@@ -151,6 +151,17 @@ init();
 animateStars();
 render();
 </script>
-  
+
+    <script>
+localStorage.setItem("lastTool","lens.html")
+localStorage.setItem("lastToolName","Lens Simulator")
+    </script>
+
+    <script>
+let views = JSON.parse(localStorage.getItem("views")) || {}
+views["Lens Simulator"] = (views["Lens Simulator"] || 0) + 1
+localStorage.setItem("views", JSON.stringify(views))
+    </script>
+    
 </body>
 </html>
