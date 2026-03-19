@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Optics Lab Pro | Physics Corrected</title>
+    <style>
+        :root { --accent: #00d2ff; --bg: #05070a; --real: #ff4b5c; --virt: #3a86ff; }
+        body { margin: 0; background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #bg { position: fixed; top: 0; left: 0; z-index: -1; }
+        .lab-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; width: 600px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        canvas#opticsCanvas { background: #000; border-radius: 6px; display: block; margin-bottom: 15px; border: 1px solid #222; }
+        .controls { display: grid; grid-template-columns: 120px 1fr 1fr auto; gap: 15px; align-items: center; }
+        .btn-stack { display: flex; flex-direction: column; gap: 4px; }
+        button { background: #111; border: 1px solid #333; color: #888; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: 700; text-transform: uppercase; transition: 0.2s; }
+        button.active { background: var(--accent); color: #000; border-color: var(--accent); }
+        button#snap { background: white; color: black; border: none; height: 100%; padding: 0 15px; font-size: 14px; border-radius: 4px; cursor: pointer; }
+        .slide-box label { font-size: 9px; color: #888; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+        .status-bar { margin-top: 15px; padding-top: 10px; border-top: 1px solid #222; display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; }
+    </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="lab-card">
+    <canvas id="opticsCanvas" width="560" height="260"></canvas>
+    <div class="controls">
+        <div class="btn-stack">
+            <button id="btnConv" class="active" onclick="setMode('convex')">Convex</button>
+            <button id="btnConc" onclick="setMode('concave')">Concave</button>
+        </div>
+        <div class="slide-box">
+            <label>Focal Length</label>
+            <input type="range" id="fRange" min="50" max="150" value="100" oninput="render()">
+        </div>
+        <div class="slide-box">
+            <label>Object Distance</label>
+            <input type="range" id="oRange" min="20" max="250" value="160" oninput="render()">
+        </div>
+        <button id="snap" onclick="takeSnapshot()"></button>
+    </div>
+    <div class="status-bar">
+        <span id="statNature">NATURE: REAL / INVERTED</span>
+        <span id="statSize" style="color:var(--accent)">SIZE: MAGNIFIED</span>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('opticsCanvas'), ctx = canvas.getContext('2d');
+const bg = document.getElementById('bg'), bctx = bg.getContext('2d');
+let mode = 'convex', stars = [];
+
+function init() {
+    bg.width = window.innerWidth; bg.height = window.innerHeight;
+    stars = Array.from({length: 70}, () => ({ x: Math.random()*bg.width, y: Math.random()*bg.height, v: Math.random()*0.5 + 0.2 }));
+}
+
+function setMode(m) {
+    mode = m;
+    document.getElementById('btnConv').className = m==='convex'?'active':'';
+    document.getElementById('btnConc').className = m==='concave'?'active':'';
+    render();
+}
+
+function takeSnapshot() {
+    const link = document.createElement('a');
+    link.download = 'optics-diagram.png';
+    link.href = canvas.toDataURL();
+    link.click();
+}
+
+function animateStars() {
+    bctx.clearRect(0,0,bg.width, bg.height);
+    bctx.fillStyle = "white";
+    stars.forEach(s => { s.y += s.v; if(s.y > bg.height) s.y = -5; bctx.fillRect(s.x, s.y, 1.2, 1.2); });
+    requestAnimationFrame(animateStars);
+}
+
+function render() {
+    ctx.clearRect(0,0,560,260);
+    const mx = 280, my = 130;
+    const rawF = parseInt(document.getElementById('fRange').value);
+    const f = mode === 'convex' ? rawF : -rawF;
+    const do_val = parseInt(document.getElementById('oRange').value);
+    const ho = 50; // Object height (upward)
+
+    // Axis
+    ctx.strokeStyle = '#222'; ctx.beginPath(); ctx.moveTo(0,my); ctx.lineTo(560,my); ctx.stroke();
+    
+    // Foci
+    ctx.fillStyle = '#f1c40f'; 
+    [-rawF, rawF].forEach(x => { ctx.beginPath(); ctx.arc(mx+x, my, 2, 0, 7); ctx.fill(); });
+
+    // Lens
+    ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 2; ctx.beginPath();
+    if(mode === 'convex') {
+        ctx.moveTo(mx, my-80); ctx.quadraticCurveTo(mx+20, my, mx, my+80); ctx.quadraticCurveTo(mx-20, my, mx, my-80);
+    } else {
+        ctx.moveTo(mx-10, my-80); ctx.lineTo(mx+10, my-80); ctx.quadraticCurveTo(mx, my, mx+10, my+80);
+        ctx.lineTo(mx-10, my+80); ctx.quadraticCurveTo(mx, my, mx-10, my-80);
+    }
+    ctx.stroke();
+
+    // Object (Always Upright)
+    const ox = mx - do_val;
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(ox, my); ctx.lineTo(ox, my-ho); ctx.stroke();
+
+    // PHYSICS MATH
+    const di = (f * do_val) / (do_val - f);
+    const magnification = -di / do_val;
+    const hi = magnification * ho; 
+    const ix = mx + di;
+
+    // Ray 1: Parallel -> Refracts through F
+    ctx.lineWidth = 1; ctx.strokeStyle = '#ff4b5c';
+    ctx.beginPath(); ctx.moveTo(ox, my-ho); ctx.lineTo(mx, my-ho);
+    let slopeF = (my - (my-ho)) / f;
+    ctx.lineTo(mx + 400, (my-ho) + 400 * slopeF);
+    ctx.stroke();
+    
+    // Ray 2: Straight through center (No Refraction)
+    ctx.strokeStyle = '#00ff88'; ctx.beginPath(); ctx.moveTo(ox, my-ho);
+    let slopeC = (my - (my-ho)) / (mx - ox);
+    ctx.lineTo(mx + 400, (my-ho) + (400 + do_val) * slopeC);
+    ctx.stroke();
+
+    // Tracebacks for Virtual Intersections (Diverging rays)
+    if(di < 0) {
+        ctx.setLineDash([4,4]); ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.beginPath(); ctx.moveTo(mx, my-ho); ctx.lineTo(mx - 400, (my-ho) - 400 * slopeF); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ox, my-ho); ctx.lineTo(ox - 200, (my-ho) - 200 * slopeC); ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // IMAGE GHOST (The Correction)
+    if(Math.abs(di) < 2000) {
+        ctx.strokeStyle = di > 0 ? '#ff4b5c' : '#3a86ff'; // Red for Real, Blue for Virtual
+        ctx.lineWidth = 3;
+        ctx.beginPath(); 
+        ctx.moveTo(ix, my); 
+        ctx.lineTo(ix, my - hi); // Corrected: Magnification dictates direction
+        ctx.stroke();
+        
+        document.getElementById('statNature').innerText = `NATURE: ${di > 0 ? 'REAL / INVERTED' : 'VIRTUAL / UPRIGHT'}`;
+        document.getElementById('statSize').innerText = `SIZE: ${Math.abs(hi) > ho ? 'MAGNIFIED' : 'DIMINISHED'}`;
+    }
+}
+
+window.onresize = init;
+init();
+animateStars();
+render();
+</script>
+  
+</body>
+</html>
