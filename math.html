@@ -28,6 +28,12 @@ font-size:18px;
 text-decoration:none;
 }
 
+  canvas{
+background:black;
+border-radius:8px;
+margin-top:10px;
+  }
+  
 </style>
 
 </head>
@@ -36,14 +42,183 @@ text-decoration:none;
 
 <h1>Mathematics Tools</h1>
 
-<div class="card">
-<a href="equation.html">Equation Balance Visualizer</a>
+<div class="card" style="position:relative;">
+
+<span class="heart" onclick="likeSim('Equation Visualizer','equation.html', this)">♡</span>
+
+<h3 data-name="Equation Visualizer">📘 Equation Visualizer</h3>
+
+<canvas id="equationPreview" width="250" height="150"></canvas>
+
+<br>
+<a href="equation.html">Open</a>
+
 </div>
 
-  <div class="card">
-<a href="linear.html">Linear Graph Visualizer</a>
+  <div class="card" style="position:relative;">
+
+<span class="heart" onclick="likeSim('Linear Graph','linear.html', this)">♡</span>
+
+<h3 data-name="Linear Graph">📈 Linear Graph</h3>
+
+<canvas id="linearPreview" width="250" height="150"></canvas>
+
+<br>
+<a href="linear.html">Open</a>
+
   </div>
 
+  <script>
+
+const eqCanvas = document.getElementById("equationPreview")
+
+if(eqCanvas){
+
+const ctx = eqCanvas.getContext("2d")
+
+let x = -5
+
+function drawEquation(){
+
+ctx.clearRect(0,0,eqCanvas.width,eqCanvas.height)
+
+ctx.fillStyle="white"
+ctx.font="14px Arial"
+
+// equation
+ctx.fillText("y = 2x + 3", 70, 30)
+
+// animate x
+let y = 2*x + 3
+
+ctx.fillText("x = " + x.toFixed(1), 30, 90)
+ctx.fillText("y = " + y.toFixed(1), 150, 90)
+
+// dot moving
+ctx.fillStyle="cyan"
+ctx.beginPath()
+ctx.arc(125 + x*10, 75 - y*5, 4, 0, Math.PI*2)
+ctx.fill()
+
+x += 0.1
+if(x > 5) x = -5
+
+requestAnimationFrame(drawEquation)
+
+}
+
+drawEquation()
+
+}
+
+  </script>
+
+  <script>
+
+const linCanvas = document.getElementById("linearPreview")
+
+if(linCanvas){
+
+const ctx = linCanvas.getContext("2d")
+
+let m = 1
+
+function drawLinear(){
+
+ctx.clearRect(0,0,linCanvas.width,linCanvas.height)
+
+// axes
+ctx.strokeStyle="white"
+ctx.beginPath()
+ctx.moveTo(0,75)
+ctx.lineTo(250,75)
+ctx.stroke()
+
+ctx.beginPath()
+ctx.moveTo(125,0)
+ctx.lineTo(125,150)
+ctx.stroke()
+
+// line
+ctx.strokeStyle="lime"
+ctx.beginPath()
+
+for(let x=-10; x<=10; x+=0.1){
+
+let y = m*x
+
+let px = 125 + x*10
+let py = 75 - y*5
+
+if(x === -10){
+ctx.moveTo(px,py)
+}else{
+ctx.lineTo(px,py)
+}
+
+}
+
+ctx.stroke()
+
+// animate slope
+m += 0.01
+if(m > 3) m = -3
+
+requestAnimationFrame(drawLinear)
+
+}
+
+drawLinear()
+
+}
+
+  </script>
+
+  <script>
+
+function likeSim(name,link,el){
+
+let liked = JSON.parse(localStorage.getItem("liked")) || []
+
+if(!liked.some(item=>item.name===name)){
+
+liked.push({name:name,link:link})
+localStorage.setItem("liked", JSON.stringify(liked))
+
+el.innerText="❤️"
+
+}else{
+
+liked = liked.filter(item=>item.name!==name)
+localStorage.setItem("liked", JSON.stringify(liked))
+
+el.innerText="♡"
+
+}
+
+}
+
+  </script>
+
+  <script>
+
+let liked = JSON.parse(localStorage.getItem("liked")) || []
+
+document.querySelectorAll(".card").forEach(card=>{
+
+let name = card.querySelector("h3").dataset.name
+let heart = card.querySelector(".heart")
+
+if(heart && liked.some(item=>item.name===name)){
+heart.innerText="❤️"
+}
+
+})
+
+  </script>
+  
+
+  
 </body>
 
 </html>
