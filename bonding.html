@@ -151,6 +151,19 @@
     };
     window.onresize(); synthesize(); loop();
 </script>
+
+    <script>
+
+let views = JSON.parse(localStorage.getItem("views")) || {}
+
+views["bonding visual"] = (views["bonding visual"] || 0) + 1
+
+localStorage.setItem("views", JSON.stringify(views))
+
+</script>
+    
 </body>
+
+    
 </html>
 
