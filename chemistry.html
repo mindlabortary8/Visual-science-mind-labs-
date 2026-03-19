@@ -74,6 +74,12 @@ transform:scale(1.2);
 .card a{
 color:#60a5fa;
 text-decoration:none;
+
+  canvas{
+background:black;
+border-radius:8px;
+margin-top:10px;
+  }
 }
 
 </style>
@@ -103,12 +109,15 @@ text-decoration:none;
 
 <!-- CHEMICAL BONDING CARD -->
 
-<div class="card">
+<div class="card" style="position:relative;">
 
 <span class="heart" onclick="likeSim('Chemical Bonding','bonding.html', this)">♡</span>
 
 <h3 data-name="Chemical Bonding">⚛ Chemical Bonding</h3>
 
+<canvas id="bondPreview" width="250" height="150"></canvas>
+
+<br>
 <a href="bonding.html">Open</a>
 
 </div>
@@ -159,6 +168,63 @@ heart.innerText="❤️"
 })
 
 </script>
+
+  <script>
+
+const canvas = document.getElementById("bondPreview")
+
+if(canvas){
+
+const ctx = canvas.getContext("2d")
+
+let t = 0
+
+function draw(){
+
+ctx.clearRect(0,0,250,150)
+
+// atoms
+let leftX = 70
+let rightX = 180
+let y = 75
+
+// draw atoms
+ctx.fillStyle="blue"
+ctx.beginPath()
+ctx.arc(leftX,y,20,0,Math.PI*2)
+ctx.fill()
+
+ctx.fillStyle="green"
+ctx.beginPath()
+ctx.arc(rightX,y,20,0,Math.PI*2)
+ctx.fill()
+
+// electron moving (shared style)
+let ex = (leftX + rightX)/2 + Math.sin(t)*25
+let ey = y
+
+ctx.fillStyle="yellow"
+ctx.beginPath()
+ctx.arc(ex,ey,4,0,Math.PI*2)
+ctx.fill()
+
+// label
+ctx.fillStyle="white"
+ctx.font="12px Arial"
+ctx.fillText("Bonding Preview", 70, 20)
+
+t += 0.05
+
+requestAnimationFrame(draw)
+
+}
+
+draw()
+
+}
+
+  </script>
+  
 
 </body>
 </html>
