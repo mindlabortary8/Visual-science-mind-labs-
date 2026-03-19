@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <span class="heart" onclick="likeSim('Mirror ray Simulator','mirror-ray-simulator.html')">
-♡
-    </span>
     
 <head>
     <meta charset="UTF-8">
@@ -96,23 +93,6 @@
 
         canvas { flex-grow: 1; }
 
-/* HEART BUTTON */
-
-.heart{
-font-size:22px;
-cursor:pointer;
-color:white;
-position:absolute;
-top:20px;
-right:20px;
-transition:0.3s;
-}
-
-.heart:hover{
-color:red;
-transform:scale(1.2);
-}
-        
     </style>
     
 </head>
@@ -294,36 +274,7 @@ localStorage.setItem("views", JSON.stringify(views))
 
     </script>
 
-    <script>
 
-function likeSim(name,link){
-
-let liked = JSON.parse(localStorage.getItem("liked")) || []
-
-let heart = document.querySelector(".heart")
-
-if(!liked.some(item=>item.name===name)){
-
-liked.push({name:name,link:link})
-
-localStorage.setItem("liked", JSON.stringify(liked))
-
-heart.innerText="❤️"
-
-}else{
-
-// remove if clicked again
-liked = liked.filter(item=>item.name!==name)
-
-localStorage.setItem("liked", JSON.stringify(liked))
-
-heart.innerText="♡"
-
-}
-
-}
-
-    </script>
     
 </body>
 </html>
