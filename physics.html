@@ -52,6 +52,12 @@ transition:0.3s;
 color:red;
 transform:scale(1.2);
 }
+
+  canvas{
+background:black;
+border-radius:8px;
+margin-top:10px;
+  }
   
 </style>
 
@@ -71,13 +77,22 @@ transform:scale(1.2);
 ♡
 </span>
 
-<h3>Mirror  Formula</h3>
+<h3>🔭 Mirror  Formula</h3>
 <a href="mirror-visualization.html">Open</a>
 
 </div>
 
-  <div class="card">
-<a href="mirror-ray-simulator.html">🔭 Mirror Ray Diagram Simulator</a>
+  <div class="card" style="position:relative;">
+
+<span class="heart" onclick="likeSim('Mirror Simulator','mirror.html', this)">♡</span>
+
+<h3>🔬 Mirror Ray Diagram Simulator</h3>
+
+<canvas id="mirrorPreview" width="250" height="150"></canvas>
+
+<br>
+<a href="mirror-ray-simulator.html">">Open</a>
+
   </div>
   
 </div>
@@ -130,6 +145,64 @@ heart.innerText="❤️"
 })
 
   </script>
+
+  <script>
+
+const canvas = document.getElementById("mirrorPreview")
+
+if(canvas){
+
+const ctx = canvas.getContext("2d")
+
+let t = 0
+
+function draw(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+// mirror (vertical line)
+ctx.strokeStyle="white"
+ctx.beginPath()
+ctx.moveTo(200,0)
+ctx.lineTo(200,150)
+ctx.stroke()
+
+// moving object
+let objX = 50 + Math.sin(t)*20
+let objY = 75
+
+// object
+ctx.fillStyle="yellow"
+ctx.beginPath()
+ctx.arc(objX,objY,5,0,Math.PI*2)
+ctx.fill()
+
+// incident ray
+ctx.strokeStyle="cyan"
+ctx.beginPath()
+ctx.moveTo(objX,objY)
+ctx.lineTo(200,objY)
+ctx.stroke()
+
+// reflected ray
+ctx.strokeStyle="red"
+ctx.beginPath()
+ctx.moveTo(200,objY)
+ctx.lineTo(250, objY - (objX-50))
+ctx.stroke()
+
+t += 0.05
+
+requestAnimationFrame(draw)
+
+}
+
+draw()
+
+}
+
+  </script>
+  
   
 
 </body>
